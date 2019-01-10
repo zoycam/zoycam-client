@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import util
+from mlog import mlog
 
 """
 def broadcast_msg(imagefile, objects, device, sessionid):
@@ -22,13 +23,20 @@ async def login_reply(state, payload):
 
 async def camera_request(state, payload):
     if "src" in payload and "dst" in payload:
-        imagefile, objects, ts = state["monitor"].get_latest()
-        if imagefile == "": return
-        ib      = util.fread(imagefile, "rb")
-        encoded = base64.b64encode(ib).decode('ascii')
-        msg     = util.serialize("camera_request_done", {"src"       : payload["src"],
-                                                         "dst"       : payload["dst"],
-                                                         "image"     : encoded,
-                                                         "objects"   : objects,
-                                                         "timestamp" : ts})
-        await state["ws"].send(msg)
+        sent = False
+        while(sent == False):
+            imagefile, objects, ts = state["monitor"].get_latest()
+            if imagefile == "":
+                await asyncio.sleep(1)
+                continue
+            else:
+                sent = True
+            ib      = util.fread(imagefile, "rb")
+            encoded = base64.b64encode(ib).decode('ascii')
+            msg     = util.serialize("camera_request_done", {"src"       : payload["src"],
+                                                             "dst"       : payload["dst"],
+                                                             "image"     : encoded,
+                                                             "objects"   : objects,
+                                                             "timestamp" : ts})
+            mlog.debug("Sending camera snapshot: %d bytes" % len(msg))
+            await state["ws"].send(msg)

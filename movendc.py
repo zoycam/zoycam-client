@@ -1,12 +1,13 @@
-import asyncio, base64, websockets, ssl
+import asyncio, base64, websockets, json, ssl
 
 import cloud, util
+from mlog import mlog
 from monitor import monitor
 from capture import capture
 
-USER    = "john"
-PASS    = "doe"
-DEVNAME = "device01"
+def get_config():
+    c = util.fread("config/movendc.cfg", "r")
+    return json.loads(c)
 
 async def cam_worker(state):
     while(state["closed"] == False):
@@ -18,10 +19,11 @@ async def cam_worker(state):
             state["monitor"].update(imagefile, objects, timestamp)
         await asyncio.sleep(1)
 
-async def login(state):
+async def login(state, cfg):
     if(state["closed"] == True):
         return
-    msg = cloud.login_msg(USER, PASS, DEVNAME)
+    msg = cloud.login_msg(cfg["user"], cfg["pass"], cfg["device"])
+    mlog.debug("Attempt to login")
     await state["ws"].send(msg)
 
 async def ws_recv(state):
@@ -30,18 +32,20 @@ async def ws_recv(state):
     while(state["closed"] == False):
         try:
             msg = await state["ws"].recv()
+            mlog.debug("Received: %d bytes" % len(msg))
             command, payload = util.deserialize(msg)
             if(command in commands): await commands[command](state, payload)
         except websockets.exceptions.ConnectionClosed as e:
-            print("connection error: ", e)
+            mlog.error("Connection error: " + e)
             state["closed"] = True
             break
         except:
-            print("error")
-    print("quitting..")
+            mlog.warning("Received unsupported message ")
+    mlog.debug("Leaving..")
 
 async def run(camera, loop):
     try:
+        cfg = get_config()
         state = { "closed"  : False,
                   "camera"  : camera,
                   "logged"  : False,
@@ -50,23 +54,22 @@ async def run(camera, loop):
         state["ssl"].verify_mode = ssl.CERT_NONE
 
         async with websockets.connect(
-                'wss://localhost:8443/websocket', ssl=state["ssl"]) as websocket:
+                'wss://'+cfg["host"]+'/websocket', ssl=state["ssl"]) as websocket:
             state["ws"] = websocket
             task1 = loop.create_task(cam_worker(state))
             task2 = loop.create_task(ws_recv(state))
-            task3 = loop.create_task(login(state))
+            task3 = loop.create_task(login(state, cfg))
             await task1
             await task2
             await task3
     except OSError as e:
-        print("error: ", e)
-    except:
-        print("error")
+        raise("Exception: ", e)
 
 def main():
+    #mlog.error("test")
     camera = capture()
     if camera.init() != 0:
-        print("Camera failed")
+        mlog.error("Camera failed")
         exit(1)
 
     loop = asyncio.get_event_loop()
