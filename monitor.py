@@ -8,6 +8,9 @@ class monitor:
         self.dblimit = 5
         self.dbfile  = self.dir + "db.mnc"
         self.latest  = {}
+        loaded       = self.load()
+        if(loaded != {}):
+            self.latest = loaded[list(loaded)[:1][0]]
 
     def store(self, dct):
         dct = dict(sorted(dct.items()))
@@ -22,13 +25,13 @@ class monitor:
         util.fwrite(self.dbfile, "w", enc)
 
     def load(self):
-        return json.loads(util.fread(self.dbfile, "r"))
+        try:
+            return json.loads(util.fread(self.dbfile, "r"))
+        except:
+            return {}
 
     def update(self, imagefile, objects, timestamp):
-        try:
-            dct = self.load()
-        except:
-            dct = {}
+        dct = self.load()
         key = round(timestamp)
         cmd = "mv %s %s%s" % (imagefile, self.dir, key)
         os.system(cmd)

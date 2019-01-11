@@ -16,7 +16,9 @@ async def cam_worker(state):
             continue
         ok, imagefile, objects, timestamp = state["camera"].fetch()
         if(imagefile != None and len(imagefile) > 0 and objects > 0):
+            mlog.debug("Broadcast objects: %d" % objects)
             state["monitor"].update(imagefile, objects, timestamp)
+            await cloud.broadcast(state)
         await asyncio.sleep(1)
 
 async def login(state, cfg):
