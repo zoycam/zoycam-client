@@ -38,6 +38,13 @@ class capture:
         self.firstFrame = self.resizeConvertBlur(frame)
         return 0
 
+    def reinit(self):
+        if(self.camera):
+            self.camera.release()
+        self.camera     = None
+        self.firstFrame = None
+        return self.init()
+
     def fetch(self):
         text = "Empty"
         ok, frame = self.camera.read()

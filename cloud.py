@@ -16,6 +16,9 @@ async def login_reply(state, payload):
     if "error" in payload and payload["error"] == "ok":
         state["logged"] = True
 
+async def camera_reinit(state, payload):
+    state["camera"].reinit()
+
 async def camera_request_send(state, src, dst, encoded, objects,
                               ts, error, dbg):
     msg = util.serialize("camera_request_done", {"src"       : src,

@@ -30,7 +30,8 @@ async def login(state, cfg):
 
 async def ws_recv(state):
     commands = { "account_login_reply" : cloud.login_reply,
-                 "camera_request"      : cloud.camera_request }
+                 "camera_request"      : cloud.camera_request,
+                 "camera_reinit"       : cloud.camera_reinit }
     while(state["closed"] == False):
         try:
             msg = await state["ws"].recv()
