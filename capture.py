@@ -23,11 +23,8 @@ class capture:
         return cv.GaussianBlur(gray, (21, 21), 0)
 
     def init(self):
-        self.camera = create_capture(0)
-        self.camera.set(cv.CAP_PROP_BUFFERSIZE, 1)
-        ok, frame = self.camera.read()
+        ok, frame = self.open()
         if not ok:
-            print('Failed to read video')
             return -1
 
         # if the frame could not be grabbed, then we have reached the end
@@ -36,6 +33,7 @@ class capture:
             return -1
 
         self.firstFrame = self.resizeConvertBlur(frame)
+        self.close()
         return 0
 
     def reinit(self):
@@ -45,11 +43,27 @@ class capture:
         self.firstFrame = None
         return self.init()
 
-    def fetch(self):
-        text = "Empty"
+    def open(self):
+        self.camera = create_capture(0)
+        self.camera.set(cv.CAP_PROP_BUFFERSIZE, 1)
         ok, frame = self.camera.read()
         if not ok:
+            print('Failed to read video')
+            return 0, None
+        return 1, frame
+
+    def close(self):
+        if(self.camera):
+            self.camera.release()
+        self.camera = None
+
+    def fetch(self):
+        text = "Empty"
+        ok, frame = self.open()
+        if not ok:
             return -1, "no_image", 0, 0
+
+        self.close()
 
         # if the frame could not be grabbed, then we have reached the end
         # of the video
