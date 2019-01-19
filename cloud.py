@@ -20,24 +20,25 @@ async def camera_reinit(state, payload):
     state["camera"].reinit()
 
 async def camera_request_send(state, src, dst, encoded, objects,
-                              ts, error, dbg):
+                              ts, error, snapshots, dbg):
     msg = util.serialize("camera_request_done", {"src"       : src,
                                                  "dst"       : dst,
                                                  "image"     : encoded,
                                                  "objects"   : objects,
                                                  "timestamp" : ts,
-                                                 "error"     : error})
+                                                 "error"     : error,
+                                                 "snapshots" : snapshots})
     mlog.debug(dbg)
     await state["ws"].send(msg)
 
 async def camera_request(state, payload):
     if "src" in payload and "dst" in payload:
-        imagefile, objects, ts = state["monitor"].get_latest()
+        imagefile, objects, ts, snapshots = state["monitor"].get_latest(payload["snapshot"])
         if imagefile == "":
             await camera_request_send(state, payload["src"], payload["dst"], "", 0,
-                                      0, 1, "No snapshot found")
+                                      0, 1, snapshots, "No snapshot found")
             return
         ib      = util.fread(imagefile, "rb")
         encoded = base64.b64encode(ib).decode('ascii')
         await camera_request_send(state, payload["src"], payload["dst"], encoded,
-                                  objects, ts, 0, "Snapshot sent")
+                                  objects, ts, 0, snapshots, "Snapshot sent")

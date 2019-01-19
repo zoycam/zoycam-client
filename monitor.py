@@ -8,9 +8,13 @@ class monitor:
         self.dblimit = 5
         self.dbfile  = self.dir + "db.mnc"
         self.latest  = {}
+        self.snapshots_cnt = 0
+        self.snapshots = {}
         loaded       = self.load()
         if(loaded != {}):
-            self.latest = loaded[list(loaded)[:1][0]]
+            self.latest    = loaded[list(loaded)[:1][0]]
+            self.snapshots_cnt = len(loaded)
+            self.snapshots = list(loaded)
 
     def store(self, dct):
         dct = dict(sorted(dct.items()))
@@ -19,9 +23,15 @@ class monitor:
             lst = sorted(dct.items())
             cmd = "rm %s%s" % (self.dir, list(lst)[0][0])
             os.system(cmd)
-            enc = json.dumps(dict(list(lst)[1:]), sort_keys=True)
+            cut = dict(list(lst)[1:])
+            enc = json.dumps(cut, sort_keys=True)
+            self.snapshots_cnt = len(cut)
+            self.snapshots = cut
         else:
-            enc = json.dumps(dict(sorted(dct.items())), sort_keys=True)
+            dct = dict(sorted(dct.items()))
+            enc = json.dumps(dct, sort_keys=True)
+            self.snapshots_cnt = len(dct)
+            self.snapshots = dct
         util.fwrite(self.dbfile, "w", enc)
 
     def load(self):
@@ -39,10 +49,21 @@ class monitor:
         dct[str(key)] = self.latest
         self.store(dct)
 
-    def get_latest(self):
+    def get_latest(self, snapshot):
         if "imagefile" in self.latest and "objects" in self.latest:
-            return self.dir + self.latest["imagefile"],\
-                   self.latest["objects"],\
-                   self.latest["imagefile"]
+            if snapshot == 0:
+                return self.dir + self.latest["imagefile"],\
+                       self.latest["objects"],\
+                       self.latest["imagefile"],\
+                       self.snapshots_cnt
+            else:
+                if snapshot >= 1 and snapshot <= len(self.snapshots):
+                    itm = list(self.snapshots.items())[snapshot - 1]
+                    return self.dir + itm[1]['imagefile'],\
+                           itm[1]['objects'],\
+                           itm[0],\
+                           self.snapshots_cnt
+                else:
+                    return "", 0, 0, self.snapshots_cnt
         else:
-            return "", 0, 0
+            return "", 0, 0, 0
