@@ -102,5 +102,5 @@ class capture:
         cv.putText(frame, dt, (10, frame.shape[0] - 10),
                    cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-        cv.imwrite(TMPFILENAME, frame, [cv.IMWRITE_PNG_COMPRESSION, 9])
+        cv.imwrite(TMPFILENAME, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
         return 0, TMPFILENAME, len(cnts), timestamp
