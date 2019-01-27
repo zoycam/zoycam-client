@@ -15,6 +15,9 @@ def login_msg(user, password, device):
 async def login_reply(state, payload):
     if "error" in payload and payload["error"] == "ok":
         state["logged"] = True
+    else:
+        mlog.debug("Login failed")
+        state["closed"] = True
 
 async def camera_reinit(state, payload):
     state["camera"].reinit()
