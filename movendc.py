@@ -6,7 +6,7 @@ from monitor import monitor
 from capture import capture
 
 def get_config():
-    c = util.fread("config/movendc.cfg", "r")
+    c = util.fread("config/zoycam.cfg", "r")
     return json.loads(c)
 
 async def cam_worker(state):
@@ -55,6 +55,7 @@ async def run(camera, loop):
                   "monitor" : monitor(),
                   "ssl"     : ssl.SSLContext() }
         state["ssl"].verify_mode = ssl.CERT_NONE
+        state["camera"].setnode(cfg["camera"])
 
         async with websockets.connect(
                 'wss://'+cfg["host"]+'/websocket', ssl=state["ssl"]) as websocket:
@@ -69,7 +70,6 @@ async def run(camera, loop):
         raise("Exception: ", e)
 
 def main():
-    #mlog.error("test")
     camera = capture()
     if camera.init() != 0:
         mlog.error("Camera failed")

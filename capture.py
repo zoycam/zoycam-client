@@ -8,12 +8,13 @@ import datetime
 import time
 from time import sleep
 
-TMPFILENAME = "tmp.png"
+TMPFILENAME = "tmp%d.png"
 
 class capture:
     def __init__(self):
         self.firstFrame = None
         self.camera     = None
+        self.node       = 0
 
     @staticmethod
     def resizeConvertBlur(frame):
@@ -36,6 +37,9 @@ class capture:
         self.close()
         return 0
 
+    def setnode(self, node):
+        self.node = int(node)
+
     def reinit(self):
         if(self.camera):
             self.camera.release()
@@ -44,7 +48,7 @@ class capture:
         return self.init()
 
     def open(self):
-        self.camera = create_capture(0)
+        self.camera = create_capture(self.node)
         self.camera.set(cv.CAP_PROP_BUFFERSIZE, 1)
         ok, frame = self.camera.read()
         if not ok:
@@ -102,5 +106,6 @@ class capture:
         cv.putText(frame, dt, (10, frame.shape[0] - 10),
                    cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-        cv.imwrite(TMPFILENAME, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
-        return 0, TMPFILENAME, len(cnts), timestamp
+        filename = TMPFILENAME % self.node
+        cv.imwrite(filename, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
+        return 0, filename, len(cnts), timestamp

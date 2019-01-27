@@ -28,7 +28,7 @@ async def camera_request_send(state, src, dst, encoded, objects,
                                                  "timestamp" : ts,
                                                  "error"     : error,
                                                  "snapshots" : snapshots})
-    mlog.debug(dbg)
+    mlog.debug(dbg % len(msg))
     await state["ws"].send(msg)
 
 async def camera_request(state, payload):
@@ -36,9 +36,9 @@ async def camera_request(state, payload):
         imagefile, objects, ts, snapshots = state["monitor"].get_latest(payload["snapshot"])
         if imagefile == "":
             await camera_request_send(state, payload["src"], payload["dst"], "", 0,
-                                      0, 1, snapshots, "No snapshot found")
+                                      0, 1, snapshots, "No snapshot found: %s bytes")
             return
         ib      = util.fread(imagefile, "rb")
         encoded = base64.b64encode(ib).decode('ascii')
         await camera_request_send(state, payload["src"], payload["dst"], encoded,
-                                  objects, ts, 0, snapshots, "Snapshot sent")
+                                  objects, ts, 0, snapshots, "Snapshot sent: %s bytes")
