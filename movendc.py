@@ -1,4 +1,4 @@
-import asyncio, base64, websockets, json, ssl
+import asyncio, base64, websockets, json, ssl, sys
 
 import cloud, util
 from mlog import mlog
@@ -6,7 +6,10 @@ from monitor import monitor
 from capture import capture
 
 def get_config():
-    c = util.fread("config/zoycam.cfg", "r")
+    filename = "config/zoycam.cfg"
+    if(len(sys.argv) == 2):
+        filename = sys.argv[1]
+    c = util.fread(filename, "r")
     return json.loads(c)
 
 async def cam_worker(state):
@@ -71,7 +74,7 @@ async def run(camera, loop):
 
 def main():
     camera = capture()
-    if camera.init() != 0:
+    if(camera.init() != 0):
         mlog.error("Camera failed")
         exit(1)
 
