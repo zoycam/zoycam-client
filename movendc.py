@@ -55,7 +55,7 @@ async def run(camera, loop):
         state = { "closed"  : False,
                   "camera"  : camera,
                   "logged"  : False,
-                  "monitor" : monitor(),
+                  "monitor" : monitor(cfg["camera"]),
                   "ssl"     : ssl.SSLContext() }
         state["ssl"].verify_mode = ssl.CERT_NONE
         state["camera"].setnode(cfg["camera"])

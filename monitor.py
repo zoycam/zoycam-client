@@ -3,8 +3,9 @@ import os
 import util
 
 class monitor:
-    def __init__(self):
-        self.dir     = "monitor/"
+    def __init__(self, node):
+        self.dir     = "monitor/%d/" % node
+        os.system("mkdir -p %s" % self.dir)
         self.dblimit = 5
         self.dbfile  = self.dir + "db.mnc"
         self.latest  = {}

@@ -101,7 +101,7 @@ class capture:
         # draw the text and timestamp on the frame
         dt = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
         timestamp = time.time()
-        cv.putText(frame, "Room Status: {}".format(text), (10, 20),
+        cv.putText(frame, "Status: {}".format(text), (10, 20),
                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         cv.putText(frame, dt, (10, frame.shape[0] - 10),
                    cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
