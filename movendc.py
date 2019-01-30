@@ -58,7 +58,7 @@ async def run(camera, loop):
                   "monitor" : monitor(cfg["camera"]),
                   "ssl"     : ssl.SSLContext() }
         state["ssl"].verify_mode = ssl.CERT_NONE
-        state["camera"].setnode(cfg["camera"])
+        state["camera"].setparams({ "node" : cfg["camera"], "processing" : cfg["processing"] })
 
         async with websockets.connect(
                 'wss://'+cfg["host"]+'/websocket', ssl=state["ssl"]) as websocket:
