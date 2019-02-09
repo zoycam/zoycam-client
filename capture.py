@@ -7,7 +7,6 @@ import datetime
 import time
 import os, sys
 from time import sleep
-from imageai.Detection import ObjectDetection
 
 class capture:
     def __init__(self):
@@ -44,6 +43,7 @@ class capture:
         self.processing = params["processing"]
 
         if(self.processing == "imageai"):
+            from imageai.Detection import ObjectDetection
             self.execution_path = os.getcwd()
             self.detector = ObjectDetection()
             self.detector.setModelTypeAsYOLOv3()
