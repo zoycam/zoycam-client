@@ -18,7 +18,7 @@ async def cam_worker(state):
             await asyncio.sleep(1)
             continue
         ok, imagefile, objects, timestamp = state["camera"].fetch()
-        if(imagefile != None and len(imagefile) > 0 and objects > 0):
+        if(imagefile != None and len(imagefile) > 0):
             mlog.debug("Broadcast objects: %d" % objects)
             state["monitor"].update(imagefile, objects, timestamp)
             await cloud.broadcast(state)
@@ -56,7 +56,8 @@ async def run(camera, loop):
                   "camera"  : camera,
                   "logged"  : False,
                   "monitor" : monitor(cfg["camera"]),
-                  "ssl"     : ssl.SSLContext() }
+                  "ssl"     : ssl.SSLContext(),
+                  "cfg"     : cfg }
         state["ssl"].verify_mode = ssl.CERT_NONE
         state["camera"].setparams({ "node" : cfg["camera"], "processing" : cfg["processing"] })
 
