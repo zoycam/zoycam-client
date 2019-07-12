@@ -13,29 +13,27 @@ class capture:
         self.firstFrame = None
         self.camera     = None
         self.node       = 0
-        self.processing = "opencv"
+        self.processing = "default"
         self.detector   = None
         self.execution_path = None
+        self.frame_width = 300
 
-    @staticmethod
-    def resizeConvertBlur(frame):
+    def resizeConvertBlur(self, frame):
         # resize the frame, convert it to grayscale, and blur it
-        frame = imutils.resize(frame, width=500)
+        frame = imutils.resize(frame, width=self.frame_width)
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        return cv.GaussianBlur(gray, (21, 21), 0)
+        return frame, cv.GaussianBlur(gray, (21, 21), 0)
 
     def init(self):
         ok, frame = self.open()
         if not ok:
             return -1
-
+        self.close()
         # if the frame could not be grabbed, then we have reached the end
         # of the video
         if frame is None:
             return -1
-
-        self.firstFrame = capture.resizeConvertBlur(frame)
-        self.close()
+        _, self.firstFrame = self.resizeConvertBlur(frame)
         return 0
 
     def setparams(self, params):
@@ -75,27 +73,26 @@ class capture:
         return "tmp%d.png" % self.node
 
     def imageai(self, frame):
+        frame = imutils.resize(frame, width=self.frame_width)
         filename = self.genfname()
+        self.drawtext(frame, "Occupied")
         cv.imwrite(self.genfname(), frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
         detections = self.detector.detectObjectsFromImage(input_image=os.path.join(self.execution_path, filename), output_image_path=os.path.join(self.execution_path , filename), minimum_percentage_probability=30)
         return 0, filename, len(detections), time.time()
 
-    def fetch(self):
-        ok, frame = self.open()
-        if not ok:
-            return -1, "no_image", 0, 0
+    def drawtext(self, frame, text):
+        # draw the text and timestamp on the frame
+        dt = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
+        timestamp = time.time()
+        cv.putText(frame, "Status: {}".format(text), (10, 20),
+                   cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        cv.putText(frame, dt, (10, frame.shape[0] - 10),
+                   cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-        self.close()
-        frame = imutils.resize(frame, width=300)
-
-        if(self.processing == "imageai"): return self.imageai(frame)
-
+    def default(self, frame):
         # if the frame could not be grabbed, then we have reached the end
         # of the video
-        if frame is None:
-            return -1, "no_frame", 0, 0
-
-        gray = capture.resizeConvertBlur(frame)
+        frame, gray = self.resizeConvertBlur(frame)
 
         frameDelta = cv.absdiff(self.firstFrame, gray)
         thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
@@ -120,14 +117,17 @@ class capture:
             cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             text = "Occupied"
 
-        # draw the text and timestamp on the frame
-        dt = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
-        timestamp = time.time()
-        cv.putText(frame, "Status: {}".format(text), (10, 20),
-                   cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        cv.putText(frame, dt, (10, frame.shape[0] - 10),
-                   cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-
+        self.drawtext(frame, text)
         filename = self.genfname()
         cv.imwrite(filename, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
         return 0, filename, len(cnts), timestamp
+
+    def fetch(self):
+        ok, frame = self.open()
+        if not ok:
+            return -1, "no_image", 0, 0
+        self.close()
+        if frame is None:
+            return -1, "no_frame", 0, 0
+        return { "default" : self.default,
+                 "imageai" : self.imageai }[self.processing](frame)
