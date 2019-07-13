@@ -120,7 +120,7 @@ class capture:
         self.drawtext(frame, text)
         filename = self.genfname()
         cv.imwrite(filename, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
-        return 0, filename, len(cnts), timestamp
+        return 0, filename, len(cnts), time.time()
 
     def fetch(self):
         ok, frame = self.open()
