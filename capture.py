@@ -84,8 +84,8 @@ class capture:
         # draw the text and timestamp on the frame
         dt = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
         timestamp = time.time()
-        cv.putText(frame, "Status: {}".format(text), (10, 20),
-                   cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #cv.putText(frame, "Status: {}".format(text), (10, 20),
+        #           cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         cv.putText(frame, dt, (10, frame.shape[0] - 10),
                    cv.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
@@ -104,6 +104,7 @@ class capture:
 	                       cv.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
 
+        """
         text = "Empty"
         # loop over the contours
         for c in cnts:
@@ -116,8 +117,8 @@ class capture:
             (x, y, w, h) = cv.boundingRect(c)
             cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             text = "Occupied"
-
-        self.drawtext(frame, text)
+        """
+        self.drawtext(frame, "Empty")
         filename = self.genfname()
         cv.imwrite(filename, frame, [cv.IMWRITE_PNG_COMPRESSION, 5])
         return 0, filename, len(cnts), time.time()
